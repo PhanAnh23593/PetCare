@@ -1,0 +1,9 @@
+service,method,path,credential,status
+clinic,POST,/api/v1/clinic/complete-profile,missing,403
+clinic,POST,/api/v1/clinic/complete-profile,invalid,403
+clinic,POST,/api/v1/clinic/complete-profile,expired,403
+clinic,POST,/api/v1/clinic/complete-profile,wrong_role,403
+social,GET,/api/v1/user/locket/feed,missing,403
+social,GET,/api/v1/user/locket/feed,invalid,403
+social,GET,/api/v1/user/locket/feed,expired,403
+social,GET,/api/v1/user/locket/feed,wrong_role,403

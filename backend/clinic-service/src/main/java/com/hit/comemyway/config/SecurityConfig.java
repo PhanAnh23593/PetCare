@@ -21,7 +21,7 @@ public class SecurityConfig {
             .permitAll().requestMatchers("/api/v1/user/**").hasAuthority("USER")
             .requestMatchers("/api/v1/clinic/**").hasAuthority("CLINIC")
             .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN").anyRequest().authenticated())
-        .exceptionHandling(e -> e.authenticationEntryPoint((q, r, x) -> r.sendError(401)))
+        .exceptionHandling(e -> e.authenticationEntryPoint((q, r, x) -> r.sendError(403)))
         .addFilterBefore(new RemoteAuthenticationFilter(identity),
             UsernamePasswordAuthenticationFilter.class)
         .build();

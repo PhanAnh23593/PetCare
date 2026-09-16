@@ -50,6 +50,8 @@ class ClinicBoundaryTest {
 
   @BeforeEach
   void prepare() {
+    outbox.deleteAll();
+    repository.deleteAll();
     var user = UserRef.builder().id(42L).username("clinic").role(Role.CLINIC)
         .status(AccountStatus.PENDING_PROFILE).build();
     when(identity.findByUsername("clinic")).thenReturn(Optional.of(user));
@@ -78,15 +80,65 @@ class ClinicBoundaryTest {
 
   @Test
   void profileAndOutboxCommitTogetherAndRetrySurvivesIdentityFailure() {
-    clinics.completeClinicProfile(profile("Consultation"));
+    doThrow(new RuntimeException("offline")).when(identity).activateClinic(42L);
+    assertThatThrownBy(() -> clinics.completeClinicProfile(profile("Consultation")))
+        .isInstanceOf(com.hit.comemyway.exception.extended.AppException.class);
     assertThat(repository.findByUserId(42L)).isPresent();
     assertThat(outbox.findById(42L)).isPresent();
-    verify(identity, never()).activateClinic(anyLong());
+    verify(identity).activateClinic(42L);
     var publisher = new ClinicActivationPublisher(outbox, identity);
     doThrow(new RuntimeException("offline")).doNothing().when(identity).activateClinic(42L);
     publisher.publish();
     assertThat(outbox.findById(42L).orElseThrow().getAttempts()).isEqualTo(1);
     publisher.publish();
+    assertThat(outbox.findById(42L)).isEmpty();
+  }
+
+  @Test
+  void successWaitsForActivationAfterCommitAndCompletedProfileStillRejectsDuplicates() {
+    doAnswer(invocation -> {
+      assertThat(org.springframework.transaction.support.TransactionSynchronizationManager
+          .isActualTransactionActive()).isFalse();
+      assertThat(repository.findByUserId(42L)).isPresent();
+      assertThat(outbox.findById(42L)).isPresent();
+      return null;
+    }).when(identity).activateClinic(42L);
+    clinics.completeClinicProfile(profile("Consultation"));
+    verify(identity).activateClinic(42L);
+    assertThat(outbox.findById(42L)).isEmpty();
+    assertThatThrownBy(() -> clinics.completeClinicProfile(profile("Other")))
+        .isInstanceOf(com.hit.comemyway.exception.extended.AppException.class);
+  }
+
+  @Test
+  void requestRetryResumesPendingActivationWithoutChangingSavedProfile() {
+    doThrow(new RuntimeException("response lost")).doNothing().when(identity).activateClinic(42L);
+    assertThatThrownBy(() -> clinics.completeClinicProfile(profile("Original")))
+        .isInstanceOf(com.hit.comemyway.exception.extended.AppException.class);
+    var result = clinics.completeClinicProfile(profile("Changed"));
+    assertThat(result.services()).containsExactly("Original");
+    assertThat(repository.count()).isEqualTo(1);
+    assertThat(outbox.findById(42L)).isEmpty();
+  }
+
+  @Test
+  void httpCannotReportSuccessWhileActivationIsUnavailable() throws Exception {
+    SecurityContextHolder.clearContext();
+    when(identity.authenticate("Bearer clinic-access"))
+        .thenReturn(UserRef.builder().id(42L).username("clinic").role(Role.CLINIC).build());
+    doThrow(new RuntimeException("offline")).doNothing().when(identity).activateClinic(42L);
+    String body = """
+        {"name":"Clinic","address":"Address","mapLink":"map","phone":"0912345678",
+         "description":"test","thumbnailUrl":"image","openTime":"08:00",
+         "closeTime":"18:00","services":["Consultation"]}
+        """;
+    for (int expected : new int[] {503, 200}) {
+      mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+          .post("/api/v1/clinic/complete-profile").header("Authorization", "Bearer clinic-access")
+          .contentType("application/json").content(body))
+          .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status()
+              .is(expected));
+    }
     assertThat(outbox.findById(42L)).isEmpty();
   }
 

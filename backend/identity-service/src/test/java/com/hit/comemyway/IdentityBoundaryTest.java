@@ -98,8 +98,19 @@ class IdentityBoundaryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void onlyClinicCanActivateAndDeliveryIsIdempotent() throws Exception {
+    var values =
+        org.mockito.Mockito.mock(org.springframework.data.redis.core.ValueOperations.class);
+    org.mockito.Mockito.when(redis.opsForValue()).thenReturn(values);
     var user = user(Role.CLINIC, AccountStatus.PENDING_PROFILE);
+    user.setPassword(passwords.encode("Password123!"));
+    users.save(user);
+    String login = json.writeValueAsString(
+        new com.hit.comemyway.dto.request.LoginRequest(user.getUsername(), "Password123!"));
+    mvc.perform(post("/api/v1/auth/login").contentType("application/json").content(login))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.accountStatus").value("PENDING_PROFILE"));
     String path = "/internal/identity/clinics/" + user.getId() + "/activate";
     mvc.perform(post(path).header("X-Service-Token", "test-social-token"))
         .andExpect(status().isForbidden());
@@ -108,5 +119,26 @@ class IdentityBoundaryTest {
           .andExpect(status().isOk());
     assertThat(users.findById(user.getId()).orElseThrow().getStatus())
         .isEqualTo(AccountStatus.ACTIVE);
+    mvc.perform(post("/api/v1/auth/login").contentType("application/json").content(login))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accountStatus").value("ACTIVE"));
+  }
+
+  @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
+  String signingKey;
+
+  @Test
+  void introspectionRejectsMissingInvalidAndGenuinelyExpiredAccessTokens() throws Exception {
+    var user = user(Role.CLINIC, AccountStatus.PENDING_PROFILE);
+    var original = com.nimbusds.jwt.SignedJWT.parse(jwt.generateToken(user, false));
+    var claims = new com.nimbusds.jwt.JWTClaimsSet.Builder(original.getJWTClaimsSet())
+        .issueTime(new java.util.Date(1000)).expirationTime(new java.util.Date(2000)).build();
+    var expired = new com.nimbusds.jwt.SignedJWT(original.getHeader(), claims);
+    expired.sign(new com.nimbusds.jose.crypto.MACSigner(signingKey));
+    mvc.perform(get("/internal/identity/me").header("X-Service-Token", "test-clinic-token"))
+        .andExpect(status().isUnauthorized());
+    for (String token : java.util.List.of("not-a-jwt", expired.serialize())) {
+      mvc.perform(get("/internal/identity/me").header("X-Service-Token", "test-clinic-token")
+          .header("Authorization", "Bearer " + token)).andExpect(status().isUnauthorized());
+    }
   }
 }

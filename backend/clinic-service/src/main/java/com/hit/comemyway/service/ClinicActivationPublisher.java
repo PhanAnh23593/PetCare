@@ -1,6 +1,7 @@
 package com.hit.comemyway.service;
 
 import com.hit.comemyway.integration.IdentityClient;
+import com.hit.comemyway.exception.extended.AppException;
 import com.hit.comemyway.repository.ClinicActivationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,19 @@ import org.springframework.data.domain.PageRequest;
 public class ClinicActivationPublisher {
   private final ClinicActivationRepository events;
   private final IdentityClient identity;
+
+  public void activate(Long userId) {
+    try {
+      identity.activateClinic(userId);
+    } catch (Exception ex) {
+      throw new AppException(503, "Identity unavailable");
+    }
+    try {
+      events.deleteById(userId);
+    } catch (Exception ex) {
+      log.warn("Clinic activation confirmed for user {}, outbox cleanup pending", userId, ex);
+    }
+  }
 
   @Scheduled(fixedDelayString = "${clinic.activation.delay-ms:5000}")
   public void publish() {

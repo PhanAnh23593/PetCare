@@ -30,6 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
+@org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @ActiveProfiles("test")
 class TransactionAndJwtCompatibilityTest {
   @MockitoBean
@@ -46,6 +47,41 @@ class TransactionAndJwtCompatibilityTest {
   JdbcTemplate jdbc;
   @Value("${jwt.secret}")
   String signingKey;
+  @Autowired
+  org.springframework.test.web.servlet.MockMvc mvc;
+  @Autowired
+  org.springframework.security.crypto.password.PasswordEncoder passwords;
+  @MockitoBean(name = "redisTemplate")
+  org.springframework.data.redis.core.RedisTemplate<String, String> redis;
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void completeProfileSuccessThenImmediateLoginObservesActiveInOldBackend() throws Exception {
+    var values =
+        org.mockito.Mockito.mock(org.springframework.data.redis.core.ValueOperations.class);
+    org.mockito.Mockito.when(redis.opsForValue()).thenReturn(values);
+    User user = clinicAccount();
+    user.setPassword(passwords.encode("Password123!"));
+    users.save(user);
+    SecurityContextHolder.clearContext();
+    String body = """
+        {"name":"Clinic","address":"Address","mapLink":"!3d21.0!4d105.0","phone":"0912345678",
+         "description":"test","thumbnailUrl":"image","openTime":"08:00",
+         "closeTime":"18:00","services":["Consultation"]}
+        """;
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+        .post("/api/v1/clinic/complete-profile")
+        .header("Authorization", "Bearer " + jwt.generateToken(user, false))
+        .contentType("application/json").content(body)).andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+        .post("/api/v1/auth/login").contentType("application/json")
+        .content("{\"username\":\"" + user.getUsername() + "\",\"password\":\"Password123!\"}"))
+        .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+            .jsonPath("$.data.accountStatus").value("ACTIVE"));
+  }
 
   @AfterEach
   void clearSecurityContext() {

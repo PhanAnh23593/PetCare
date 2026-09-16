@@ -15,6 +15,9 @@ import org.springframework.data.util.Pair;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalTime;
@@ -32,6 +35,8 @@ public class ClinicService {
   private final SearchClinicsService searchClinicsService;
   private final MapService mapService;
   private final com.hit.comemyway.repository.ClinicActivationRepository activations;
+  private final PlatformTransactionManager transactionManager;
+  private final ClinicActivationPublisher activationPublisher;
   private static final double ONE_LATITUDE = 111.045;
   private static final int NUMBER_OSRM = 15;
 
@@ -245,14 +250,30 @@ public class ClinicService {
     return CompleteClinicProfileResponse.from(clinic);
   }
 
-  @Transactional(rollbackFor = Exception.class)
   public CompleteClinicProfileResponse completeClinicProfile(CompleteClinicProfileRequest request) {
+    // Commit the profile and durable retry event before contacting Identity. A successful
+    // response must mean that a subsequent login observes ACTIVE.
+    var transaction = new TransactionTemplate(transactionManager);
+    transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    var completion = transaction.execute(status -> saveClinicProfile(request));
+    activationPublisher.activate(completion.userId());
+    return completion.response();
+  }
+
+  private record ProfileCompletion(Long userId, CompleteClinicProfileResponse response) {}
+
+  private ProfileCompletion saveClinicProfile(CompleteClinicProfileRequest request) {
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
     UserRef user = userRepository.findByUsername(username)
         .orElseThrow(() -> new AppException(404, ErrorMessage.User.USER_NOT_EXISTED));
 
     if (clinicRepository.existsByUserId(user.getId())) {
+      // Resume only an unfinished delivery; completed profiles retain the old duplicate error.
+      if (activations.existsById(user.getId())) {
+        return new ProfileCompletion(user.getId(), CompleteClinicProfileResponse
+            .from(clinicRepository.findByUserId(user.getId()).orElseThrow()));
+      }
       throw new AppException(400, ErrorMessage.Clinic.CLINIC_PROFILE_ALREADY_DONE);
     }
 
@@ -280,7 +301,7 @@ public class ClinicService {
     clinicRepository.save(clinic);
     activations.save(new com.hit.comemyway.entity.ClinicActivation(user.getId()));
 
-    return CompleteClinicProfileResponse.from(clinic);
+    return new ProfileCompletion(user.getId(), CompleteClinicProfileResponse.from(clinic));
   }
 
   @Transactional
