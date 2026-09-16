@@ -1,0 +1,29 @@
+{
+  "httpStatus" : 200,
+  "contentType" : "application/json",
+  "body" : {
+    "statusCode" : 200,
+    "message" : null,
+    "data" : {
+      "content" : [ {
+        "id" : 1,
+        "userId" : 1,
+        "username" : "fixture",
+        "userAvatar" : "fixture",
+        "imageUrl" : "fixture",
+        "caption" : "fixture",
+        "createdAt" : "2026-01-01T00:00:00Z"
+      } ],
+      "hasNext" : false,
+      "lastPostId" : 1
+    }
+  },
+  "headers" : {
+    "Cache-Control" : "no-cache, no-store, max-age=0, must-revalidate",
+    "Pragma" : "no-cache",
+    "Expires" : "0",
+    "X-Content-Type-Options" : "nosniff",
+    "X-Frame-Options" : "DENY",
+    "X-XSS-Protection" : "0"
+  }
+}

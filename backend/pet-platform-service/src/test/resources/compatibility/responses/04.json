@@ -1,0 +1,23 @@
+{
+  "httpStatus" : 200,
+  "contentType" : "application/json",
+  "body" : {
+    "statusCode" : 200,
+    "message" : "success",
+    "data" : {
+      "accessToken" : "fixture",
+      "refreshToken" : "fixture",
+      "userId" : 1,
+      "role" : "USER",
+      "accountStatus" : "PENDING_PASSWORD_CHANGE"
+    }
+  },
+  "headers" : {
+    "Cache-Control" : "no-cache, no-store, max-age=0, must-revalidate",
+    "Pragma" : "no-cache",
+    "Expires" : "0",
+    "X-Content-Type-Options" : "nosniff",
+    "X-Frame-Options" : "DENY",
+    "X-XSS-Protection" : "0"
+  }
+}

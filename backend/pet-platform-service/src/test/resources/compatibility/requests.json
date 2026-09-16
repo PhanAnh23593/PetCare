@@ -1,0 +1,467 @@
+[
+  {
+    "id": "01",
+    "method": "POST",
+    "path": "/api/v1/auth/login",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "username": "test_user",
+      "password": "Password1!"
+    }
+  },
+  {
+    "id": "02",
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "username": "test_user",
+      "password": "Password1!",
+      "confirmPassword": "Password1!",
+      "email": "test@example.invalid"
+    }
+  },
+  {
+    "id": "03",
+    "method": "POST",
+    "path": "/api/v1/auth/verify-register",
+    "role": "PUBLIC",
+    "status": 201,
+    "body": {
+      "email": "test@example.invalid",
+      "otp": "123456"
+    }
+  },
+  {
+    "id": "04",
+    "method": "POST",
+    "path": "/api/v1/auth/refresh",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "refreshToken": "fixture"
+    }
+  },
+  {
+    "id": "05",
+    "method": "POST",
+    "path": "/api/v1/auth/forgot-password",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "email": "test@example.invalid"
+    }
+  },
+  {
+    "id": "06",
+    "method": "POST",
+    "path": "/api/v1/auth/verify-otp",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "email": "test@example.invalid",
+      "otp": "123456"
+    }
+  },
+  {
+    "id": "07",
+    "method": "POST",
+    "path": "/api/v1/auth/reset-password",
+    "role": "PUBLIC",
+    "status": 200,
+    "body": {
+      "token": "fixture",
+      "newPassword": "Password1!",
+      "confirmPassword": "Password1!"
+    }
+  },
+  {
+    "id": "08",
+    "method": "POST",
+    "path": "/api/v1/user/logout",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "refreshToken": "fixture"
+    }
+  },
+  {
+    "id": "09",
+    "method": "POST",
+    "path": "/api/v1/user/device-token",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "deviceToken": "fixture"
+    }
+  },
+  {
+    "id": "10",
+    "method": "GET",
+    "path": "/api/v1/user/profile",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "11",
+    "method": "POST",
+    "path": "/api/v1/user/update-profile/1",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "fullName": "Test User",
+      "phone": "0912345678",
+      "homeAddress": "test",
+      "email": "test@example.invalid",
+      "avatar": "fixture",
+      "hobby": "test"
+    }
+  },
+  {
+    "id": "12",
+    "method": "POST",
+    "path": "/api/v1/user/change-password",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "oldPassword": "Oldpass1!",
+      "newPassword": "Password1!",
+      "confirmPassword": "Password1!"
+    }
+  },
+  {
+    "id": "13",
+    "method": "GET",
+    "path": "/api/v1/user/locket-link",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "14",
+    "method": "POST",
+    "path": "/api/v1/admin/create-clinic",
+    "role": "ADMIN",
+    "status": 200,
+    "body": {
+      "username": "test_clinic",
+      "email": "clinic@example.invalid"
+    }
+  },
+  {
+    "id": "15",
+    "method": "GET",
+    "path": "/api/v1/public/clinics/search",
+    "role": "PUBLIC",
+    "status": 200
+  },
+  {
+    "id": "16",
+    "method": "GET",
+    "path": "/api/v1/public/clinics/suggestions",
+    "role": "PUBLIC",
+    "status": 200
+  },
+  {
+    "id": "17",
+    "method": "GET",
+    "path": "/api/v1/public/clinics/1",
+    "role": "PUBLIC",
+    "status": 200
+  },
+  {
+    "id": "18",
+    "method": "GET",
+    "path": "/api/v1/public/clinics/1/booking",
+    "role": "PUBLIC",
+    "status": 200
+  },
+  {
+    "id": "19",
+    "method": "GET",
+    "path": "/api/v1/public/suggestions/location",
+    "role": "PUBLIC",
+    "status": 200
+  },
+  {
+    "id": "20",
+    "method": "POST",
+    "path": "/api/v1/clinic/complete-profile",
+    "role": "CLINIC",
+    "status": 200,
+    "body": {
+      "name": "Test clinic",
+      "address": "test",
+      "mapLink": "https://maps.example.invalid/!3d21.0!4d105.0",
+      "phone": "0912345678",
+      "description": "test",
+      "thumbnailUrl": "https://images.example.invalid/test.jpg",
+      "openTime": "08:00",
+      "closeTime": "20:00",
+      "services": [
+        "Khám"
+      ]
+    }
+  },
+  {
+    "id": "21",
+    "method": "GET",
+    "path": "/api/v1/clinic/profile",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "22",
+    "method": "POST",
+    "path": "/api/v1/clinic/update-profile",
+    "role": "CLINIC",
+    "status": 200,
+    "body": {
+      "name": "Test clinic",
+      "address": "test",
+      "mapLink": "https://maps.example.invalid/!3d21.0!4d105.0",
+      "phone": "0912345678",
+      "description": "test",
+      "thumbnailUrl": "https://images.example.invalid/test.jpg",
+      "openTime": "08:00",
+      "closeTime": "20:00",
+      "services": [
+        "Khám"
+      ]
+    }
+  },
+  {
+    "id": "23",
+    "method": "POST",
+    "path": "/api/v1/clinic/change-password",
+    "role": "CLINIC",
+    "status": 200,
+    "body": {
+      "password": "Password1!",
+      "confirmPassword": "Password1!"
+    }
+  },
+  {
+    "id": "24",
+    "method": "POST",
+    "path": "/api/v1/user/appointments",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "clinicId": 1,
+      "fullName": "Test User",
+      "phone": "0912345678",
+      "bookingType": "AT_CLINIC",
+      "homeAddress": "test",
+      "petQuantity": 1,
+      "petType": "dog",
+      "petCondition": "test",
+      "appointmentDate": "2030-01-01",
+      "appointmentTime": "09:30",
+      "serviceIds": [
+        1
+      ]
+    }
+  },
+  {
+    "id": "25",
+    "method": "GET",
+    "path": "/api/v1/user/appointments",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "26",
+    "method": "POST",
+    "path": "/api/v1/user/appointments/update/1",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "clinicId": 1,
+      "fullName": "Test User",
+      "phone": "0912345678",
+      "bookingType": "AT_CLINIC",
+      "homeAddress": "test",
+      "petQuantity": 1,
+      "petType": "dog",
+      "petCondition": "test",
+      "appointmentDate": "2030-01-01",
+      "appointmentTime": "09:30",
+      "serviceIds": [
+        1
+      ]
+    }
+  },
+  {
+    "id": "27",
+    "method": "GET",
+    "path": "/api/v1/user/appointments/detail/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "28",
+    "method": "POST",
+    "path": "/api/v1/user/appointments/cancel/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "29",
+    "method": "GET",
+    "path": "/api/v1/clinic/appointments/detail/1",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "30",
+    "method": "GET",
+    "path": "/api/v1/clinic/appointments/pending",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "31",
+    "method": "GET",
+    "path": "/api/v1/clinic/appointments/comfirmed",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "32",
+    "method": "GET",
+    "path": "/api/v1/clinic/appointments/rejected",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "33",
+    "method": "POST",
+    "path": "/api/v1/clinic/appointments/1/confirm",
+    "role": "CLINIC",
+    "status": 200
+  },
+  {
+    "id": "34",
+    "method": "POST",
+    "path": "/api/v1/clinic/appointments/1/reject",
+    "role": "CLINIC",
+    "status": 200,
+    "body": {
+      "rejectReason": "fixture"
+    }
+  },
+  {
+    "id": "35",
+    "method": "POST",
+    "path": "/api/v1/user/locket/add-friend",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "friendId": 1
+    }
+  },
+  {
+    "id": "36",
+    "method": "GET",
+    "path": "/api/v1/user/locket/pending",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "37",
+    "method": "POST",
+    "path": "/api/v1/user/locket/accept-request/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "38",
+    "method": "POST",
+    "path": "/api/v1/user/locket/reject-request/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "39",
+    "method": "GET",
+    "path": "/api/v1/user/locket/my-friend",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "40",
+    "method": "POST",
+    "path": "/api/v1/user/locket/find-friend/ignored",
+    "role": "USER",
+    "status": 200,
+    "body": {
+      "locketLink": "https://petlocket.com/add?code=fixture"
+    }
+  },
+  {
+    "id": "41",
+    "method": "POST",
+    "path": "/api/v1/user/locket/unfriend/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "42",
+    "method": "POST",
+    "path": "/api/v1/user/locket/create-post",
+    "role": "USER",
+    "status": 201,
+    "body": {
+      "imageUrl": "fixture",
+      "caption": "fixture"
+    }
+  },
+  {
+    "id": "43",
+    "method": "GET",
+    "path": "/api/v1/user/locket/feed",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "44",
+    "method": "GET",
+    "path": "/api/v1/user/locket/my-posts",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "45",
+    "method": "POST",
+    "path": "/api/v1/user/locket/delete-post/1",
+    "role": "USER",
+    "status": 200
+  },
+  {
+    "id": "46",
+    "method": "POST",
+    "path": "/api/v1/media/upload",
+    "role": "AUTHENTICATED",
+    "status": 200,
+    "multipart": true
+  },
+  {
+    "id": "47",
+    "method": "POST",
+    "path": "/api/v1/chat",
+    "role": "AUTHENTICATED",
+    "status": 200,
+    "body": {
+      "message": "fixture"
+    }
+  },
+  {
+    "id": "48",
+    "method": "GET",
+    "path": "/api/v1/public/health",
+    "role": "PUBLIC",
+    "status": 200
+  }
+]

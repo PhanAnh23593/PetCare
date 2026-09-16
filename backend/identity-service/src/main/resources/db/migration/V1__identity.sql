@@ -1,0 +1,10 @@
+CREATE TABLE users (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ created_at TIMESTAMP(6) NOT NULL, updated_at TIMESTAMP(6) NOT NULL,
+ username VARCHAR(120) NOT NULL UNIQUE, password VARCHAR(120) NOT NULL,
+ full_name VARCHAR(120), phone VARCHAR(15), home_address VARCHAR(255) NOT NULL,
+ email VARCHAR(100) NOT NULL UNIQUE, avatar VARCHAR(500), hobby VARCHAR(300),
+ role VARCHAR(20) NOT NULL, locket_code VARCHAR(255), device_token VARCHAR(255),
+ status VARCHAR(40)
+);
+CREATE TABLE invalidated_token (id VARCHAR(255) PRIMARY KEY, expiry_time DATETIME(6));

@@ -21,6 +21,18 @@ target/
 *.ipr
 
 .env
+.env.*
+!.env.example
+!.env.aws.example
+secrets/
+backups/
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+*.hprof
+hs_err_pid*
 
 ### NetBeans ###
 /nbproject/private/
@@ -36,4 +48,7 @@ build/
 .vscode/
 
 ### Firebase ###
-src/main/resources/firebase-service-account.json
+**/firebase-service-account.json
+.local/
+.m2repo/
+compatibility/*.log

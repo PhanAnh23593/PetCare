@@ -1,0 +1,37 @@
+{
+  "httpStatus" : 200,
+  "contentType" : "application/json",
+  "body" : {
+    "statusCode" : 200,
+    "message" : null,
+    "data" : [ {
+      "id" : 1,
+      "userId" : 1,
+      "clinicId" : 1,
+      "avatar" : "fixture",
+      "fullName" : "fixture",
+      "phone" : "fixture",
+      "bookingType" : "AT_CLINIC",
+      "homeAddress" : "fixture",
+      "petType" : "fixture",
+      "petCondition" : "fixture",
+      "petQuantity" : 1,
+      "appointmentDate" : "2030-01-01",
+      "appointmentTime" : "09:30:00",
+      "services" : [ {
+        "id" : 1,
+        "name" : "fixture"
+      } ],
+      "status" : "PENDING",
+      "rejectReason" : "fixture"
+    } ]
+  },
+  "headers" : {
+    "Cache-Control" : "no-cache, no-store, max-age=0, must-revalidate",
+    "Pragma" : "no-cache",
+    "Expires" : "0",
+    "X-Content-Type-Options" : "nosniff",
+    "X-Frame-Options" : "DENY",
+    "X-XSS-Protection" : "0"
+  }
+}

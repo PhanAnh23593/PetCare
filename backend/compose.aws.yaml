@@ -1,0 +1,83 @@
+# Use WITH compose.yaml; requires Docker Compose >= 2.24.4.
+# docker compose --env-file .env.aws -f compose.yaml -f compose.aws.yaml up -d
+name: comemyway-aws
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+services:
+  identity-db:
+    ports: !reset []
+    environment:
+      MYSQL_PASSWORD: "${IDENTITY_DB_PASSWORD:?Set a production database password}"
+      MYSQL_ROOT_PASSWORD: "${IDENTITY_DB_ROOT_PASSWORD:?Set a production root password}"
+    restart: unless-stopped
+    logging: *logging
+  clinic-db:
+    ports: !reset []
+    environment:
+      MYSQL_PASSWORD: "${CLINIC_DB_PASSWORD:?Set a production database password}"
+      MYSQL_ROOT_PASSWORD: "${CLINIC_DB_ROOT_PASSWORD:?Set a production root password}"
+    restart: unless-stopped
+    logging: *logging
+  social-db:
+    ports: !reset []
+    environment:
+      MYSQL_PASSWORD: "${SOCIAL_DB_PASSWORD:?Set a production database password}"
+      MYSQL_ROOT_PASSWORD: "${SOCIAL_DB_ROOT_PASSWORD:?Set a production root password}"
+    restart: unless-stopped
+    logging: *logging
+  redis:
+    ports: !reset []
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    logging: *logging
+  api-gateway:
+    ports: !override
+      - "127.0.0.1:8080:8080"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+    logging: *logging
+  identity-service:
+    environment:
+      IDENTITY_DB_PASSWORD: "${IDENTITY_DB_PASSWORD:?Set a production database password}"
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+    logging: *logging
+  clinic-service:
+    environment:
+      CLINIC_DB_PASSWORD: "${CLINIC_DB_PASSWORD:?Set a production database password}"
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+    volumes:
+      - ./secrets:/etc/secrets:ro
+    logging: *logging
+  social-service:
+    environment:
+      SOCIAL_DB_PASSWORD: "${SOCIAL_DB_PASSWORD:?Set a production database password}"
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+    logging: *logging
+  media-service:
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
+    logging: *logging
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      API_DOMAIN: "${API_DOMAIN:?Set your API domain, e.g. api.example.com}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    logging: *logging
+volumes:
+  redis-data:
+  caddy-data:
+  caddy-config:

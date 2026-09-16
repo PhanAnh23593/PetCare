@@ -1,0 +1,7 @@
+{$API_DOMAIN} {
+    reverse_proxy api-gateway:8080 {
+        # The application uses this header as its rate-limit key.
+        # Replace client-supplied values at the public entry point.
+        header_up X-Forwarded-For {remote_host}
+    }
+}

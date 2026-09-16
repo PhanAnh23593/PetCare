@@ -1,0 +1,31 @@
+{
+  "httpStatus" : 200,
+  "contentType" : "application/json",
+  "body" : {
+    "statusCode" : 200,
+    "message" : null,
+    "data" : {
+      "id" : 1,
+      "thumbnailUrl" : "fixture",
+      "name" : "fixture",
+      "isOperating" : true,
+      "rating" : 1.5,
+      "description" : "fixture",
+      "phone" : "fixture",
+      "address" : "fixture",
+      "openTime" : "09:30:00",
+      "closeTime" : "09:30:00",
+      "services" : [ "fixture" ],
+      "mapLink" : "fixture",
+      "distance" : 1.5
+    }
+  },
+  "headers" : {
+    "Cache-Control" : "no-cache, no-store, max-age=0, must-revalidate",
+    "Pragma" : "no-cache",
+    "Expires" : "0",
+    "X-Content-Type-Options" : "nosniff",
+    "X-Frame-Options" : "DENY",
+    "X-XSS-Protection" : "0"
+  }
+}

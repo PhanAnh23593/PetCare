@@ -1,0 +1,168 @@
+name: comemyway-microservices
+services:
+  identity-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: identity_db
+      MYSQL_USER: comemyway
+      MYSQL_PASSWORD: "${IDENTITY_DB_PASSWORD:-local-development-password}"
+      MYSQL_ROOT_PASSWORD: "${IDENTITY_DB_ROOT_PASSWORD:-local-development-root-password}"
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - identity-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  clinic-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: clinic_db
+      MYSQL_USER: comemyway
+      MYSQL_PASSWORD: "${CLINIC_DB_PASSWORD:-local-development-password}"
+      MYSQL_ROOT_PASSWORD: "${CLINIC_DB_ROOT_PASSWORD:-local-development-root-password}"
+    ports:
+      - "127.0.0.1:3308:3306"
+    volumes:
+      - clinic-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  social-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: social_db
+      MYSQL_USER: comemyway
+      MYSQL_PASSWORD: "${SOCIAL_DB_PASSWORD:-local-development-password}"
+      MYSQL_ROOT_PASSWORD: "${SOCIAL_DB_ROOT_PASSWORD:-local-development-root-password}"
+    ports:
+      - "127.0.0.1:3309:3306"
+    volumes:
+      - social-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api-gateway:
+    image: comemyway-api-gateway:local
+    build:
+      context: .
+      args:
+        SERVICE: api-gateway
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      CLINIC_SERVICE_URL: http://clinic-service:8083
+      SOCIAL_SERVICE_URL: http://social-service:8084
+    depends_on:
+      - identity-service
+      - clinic-service
+      - social-service
+    restart: unless-stopped
+  identity-service:
+    image: comemyway-identity-service:local
+    build:
+      context: .
+      args:
+        SERVICE: identity-service
+    environment:
+      IDENTITY_PORT: 8081
+      IDENTITY_BIND_ADDRESS: 0.0.0.0
+      IDENTITY_DB_URL: jdbc:mysql://identity-db:3306/identity_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      IDENTITY_DB_USERNAME: comemyway
+      IDENTITY_DB_PASSWORD: "${IDENTITY_DB_PASSWORD:-local-development-password}"
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env}"
+      JWT_ACCESS_EXPIRATION: "${JWT_ACCESS_EXPIRATION:-1800000}"
+      JWT_REFRESH_EXPIRATION: "${JWT_REFRESH_EXPIRATION:-604800000}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_SSL_ENABLED: "false"
+      BREVO_API_KEY: "${BREVO_API_KEY:-}"
+      BREVO_SENDER_EMAIL: "${BREVO_SENDER_EMAIL:-}"
+      BOOTSTRAP_ADMIN_PASSWORD: "${BOOTSTRAP_ADMIN_PASSWORD:-}"
+      BOOTSTRAP_ADMIN_USERNAME: "${BOOTSTRAP_ADMIN_USERNAME:-devadmin}"
+      BOOTSTRAP_ADMIN_EMAIL: "${BOOTSTRAP_ADMIN_EMAIL:-devadmin@example.invalid}"
+      CLINIC_INTERNAL_TOKEN: "${CLINIC_INTERNAL_TOKEN:?Set this internal token in the environment}"
+      SOCIAL_INTERNAL_TOKEN: "${SOCIAL_INTERNAL_TOKEN:?Set this internal token in the environment}"
+      MEDIA_SERVICE_URL: http://media-service:8082
+      MEDIA_INTERNAL_TOKEN: "${MEDIA_INTERNAL_TOKEN:?Set this internal token in the environment}"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+  clinic-service:
+    image: comemyway-clinic-service:local
+    build:
+      context: .
+      args:
+        SERVICE: clinic-service
+    environment:
+      CLINIC_PORT: 8083
+      CLINIC_BIND_ADDRESS: 0.0.0.0
+      CLINIC_DB_URL: jdbc:mysql://clinic-db:3306/clinic_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      CLINIC_DB_USERNAME: comemyway
+      CLINIC_DB_PASSWORD: "${CLINIC_DB_PASSWORD:-local-development-password}"
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      CLINIC_INTERNAL_TOKEN: "${CLINIC_INTERNAL_TOKEN:?Set this internal token in the environment}"
+      MEDIA_SERVICE_URL: http://media-service:8082
+      MEDIA_INTERNAL_TOKEN: "${MEDIA_INTERNAL_TOKEN:?Set this internal token in the environment}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+    depends_on:
+      clinic-db:
+        condition: service_healthy
+    restart: unless-stopped
+  social-service:
+    image: comemyway-social-service:local
+    build:
+      context: .
+      args:
+        SERVICE: social-service
+    environment:
+      SOCIAL_PORT: 8084
+      SOCIAL_BIND_ADDRESS: 0.0.0.0
+      SOCIAL_DB_URL: jdbc:mysql://social-db:3306/social_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SOCIAL_DB_USERNAME: comemyway
+      SOCIAL_DB_PASSWORD: "${SOCIAL_DB_PASSWORD:-local-development-password}"
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      SOCIAL_INTERNAL_TOKEN: "${SOCIAL_INTERNAL_TOKEN:?Set this internal token in the environment}"
+    depends_on:
+      social-db:
+        condition: service_healthy
+    restart: unless-stopped
+  media-service:
+    image: comemyway-media-service:local
+    build:
+      context: .
+      args:
+        SERVICE: media-service
+    environment:
+      MEDIA_PORT: 8082
+      MEDIA_BIND_ADDRESS: 0.0.0.0
+      MEDIA_INTERNAL_TOKEN: "${MEDIA_INTERNAL_TOKEN:?Set this internal token in the environment}"
+      CLOUDINARY_CLOUD_NAME: "${CLOUDINARY_CLOUD_NAME:-}"
+      CLOUDINARY_API_KEY: "${CLOUDINARY_API_KEY:-}"
+      CLOUDINARY_API_SECRET: "${CLOUDINARY_API_SECRET:-}"
+    restart: unless-stopped
+volumes:
+  identity-data:
+  clinic-data:
+  social-data:
