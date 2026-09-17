@@ -43,11 +43,13 @@ services:
     logging: *logging
   identity-service:
     environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       IDENTITY_DB_PASSWORD: "${IDENTITY_DB_PASSWORD:?Set a production database password}"
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
     logging: *logging
   clinic-service:
     environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       CLINIC_DB_PASSWORD: "${CLINIC_DB_PASSWORD:?Set a production database password}"
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
     volumes:
@@ -55,6 +57,7 @@ services:
     logging: *logging
   social-service:
     environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       SOCIAL_DB_PASSWORD: "${SOCIAL_DB_PASSWORD:?Set a production database password}"
       JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
     logging: *logging
