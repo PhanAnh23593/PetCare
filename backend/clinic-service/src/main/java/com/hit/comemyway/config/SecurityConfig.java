@@ -2,6 +2,7 @@ package com.hit.comemyway.config;
 
 import com.hit.comemyway.integration.IdentityClient;
 import com.hit.comemyway.security.RemoteAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,7 +22,12 @@ public class SecurityConfig {
             .permitAll().requestMatchers("/api/v1/user/**").hasAuthority("USER")
             .requestMatchers("/api/v1/clinic/**").hasAuthority("CLINIC")
             .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN").anyRequest().authenticated())
-        .exceptionHandling(e -> e.authenticationEntryPoint((q, r, x) -> r.sendError(403)))
+        .exceptionHandling(
+            e ->
+                e.authenticationEntryPoint(
+                        (q, r, x) -> r.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                    .accessDeniedHandler(
+                        (q, r, x) -> r.sendError(HttpServletResponse.SC_FORBIDDEN)))
         .addFilterBefore(new RemoteAuthenticationFilter(identity),
             UsernamePasswordAuthenticationFilter.class)
         .build();
