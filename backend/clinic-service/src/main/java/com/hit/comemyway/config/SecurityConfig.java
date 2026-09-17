@@ -22,12 +22,9 @@ public class SecurityConfig {
             .permitAll().requestMatchers("/api/v1/user/**").hasAuthority("USER")
             .requestMatchers("/api/v1/clinic/**").hasAuthority("CLINIC")
             .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN").anyRequest().authenticated())
-        .exceptionHandling(
-            e ->
-                e.authenticationEntryPoint(
-                        (q, r, x) -> r.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-                    .accessDeniedHandler(
-                        (q, r, x) -> r.sendError(HttpServletResponse.SC_FORBIDDEN)))
+        .exceptionHandling(e -> e
+            .authenticationEntryPoint((q, r, x) -> r.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+            .accessDeniedHandler((q, r, x) -> r.sendError(HttpServletResponse.SC_FORBIDDEN)))
         .addFilterBefore(new RemoteAuthenticationFilter(identity),
             UsernamePasswordAuthenticationFilter.class)
         .build();
