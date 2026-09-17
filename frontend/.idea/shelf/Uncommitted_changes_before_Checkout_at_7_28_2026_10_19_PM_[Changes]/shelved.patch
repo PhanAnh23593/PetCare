@@ -1,0 +1,538 @@
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingState.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingState.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingState.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingState.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingState.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingState.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingState.kt	(date 1785239181582)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editpassword_setting
++package com.vetpet.petbeats.ui.home_user.edit_password_setting
+ 
+ data class EditPasswordSettingState (
+     val password: String = "",
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingEvent.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingEvent.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingEvent.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingEvent.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingEvent.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingEvent.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingEvent.kt	(date 1785239181714)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editpassword_setting
++package com.vetpet.petbeats.ui.home_user.edit_password_setting
+ 
+ sealed class EditPasswordSettingEvent {
+     object NavigationForgotPassword: EditPasswordSettingEvent()
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/chatbot/ChatbotViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_user.chatbot\r\n\r\nimport androidx.lifecycle.ViewModel\r\nimport androidx.lifecycle.viewModelScope\r\nimport com.vetpet.petbeats.core.base.DataResult\r\nimport com.vetpet.petbeats.data.remote.model.calendar.home_user.request.ChatRequest\r\nimport com.vetpet.petbeats.data.repository.HomeUserRepository\r\nimport kotlinx.coroutines.flow.MutableSharedFlow\r\nimport kotlinx.coroutines.flow.MutableStateFlow\r\nimport kotlinx.coroutines.flow.asSharedFlow\r\nimport kotlinx.coroutines.flow.asStateFlow\r\nimport kotlinx.coroutines.launch\r\n\r\n\r\nclass ChatbotViewModel(\r\n    private val repository: HomeUserRepository\r\n): ViewModel() {\r\n    private val _state = MutableStateFlow(ChatbotState())\r\n    val state = _state.asStateFlow()\r\n\r\n    private val _event = MutableSharedFlow<List<ChatbotEvent>>()\r\n    val event = _event.asSharedFlow()\r\n\r\n\r\n\r\n    fun onChatUserChange(chatUser: String) {\r\n        _state.value = _state.value.copy(chatUser = chatUser, isChatUser = chatUser.isNotEmpty())\r\n    }\r\n\r\n\r\n    fun onChatBot() {\r\n        val chatUser = _state.value.chatUser\r\n\r\n\r\n        val currentList = mutableListOf<ChatbotEvent>()\r\n        currentList.add(ChatbotEvent.UserMessage(chatUser))\r\n        currentList.add(ChatbotEvent.BotTyping)\r\n\r\n        _state.value = _state.value.copy(chatUser = \"\", isChatUser = false, isLogo = true)\r\n\r\n\r\n//        viewModelScope.launch {\r\n//            val request = ChatRequest(chatUser)\r\n//            val result = repository.chatBot(request)\r\n//\r\n//            when (result) {\r\n//                is DataResult.Success -> {\r\n//\r\n//\r\n//\r\n//                }\r\n//                is DataResult.Error -> {\r\n//\r\n//                }\r\n//            }\r\n//        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/chatbot/ChatbotViewModel.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/chatbot/ChatbotViewModel.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/chatbot/ChatbotViewModel.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/chatbot/ChatbotViewModel.kt	(date 1785221767178)
+@@ -18,8 +18,8 @@
+     private val _state = MutableStateFlow(ChatbotState())
+     val state = _state.asStateFlow()
+ 
+-    private val _event = MutableSharedFlow<List<ChatbotEvent>>()
+-    val event = _event.asSharedFlow()
++    private val _event = MutableStateFlow<List<ChatbotEvent>>(emptyList())
++    val event = _event.asStateFlow()
+ 
+ 
+ 
+@@ -32,27 +32,29 @@
+         val chatUser = _state.value.chatUser
+ 
+ 
+-        val currentList = mutableListOf<ChatbotEvent>()
++        val currentList = _event.value.toMutableList()
+         currentList.add(ChatbotEvent.UserMessage(chatUser))
+         currentList.add(ChatbotEvent.BotTyping)
+ 
+-        _state.value = _state.value.copy(chatUser = "", isChatUser = false, isLogo = true)
++
++        _event.value = currentList
++
++
++        viewModelScope.launch {
++            val request = ChatRequest(chatUser)
++            val result = repository.chatBot(request)
++
++            when (result) {
++                is DataResult.Success -> {
++                    _state.value = _state.value.copy(chatUser = "", isChatUser = false, isLogo = true)
+ 
+ 
+-//        viewModelScope.launch {
+-//            val request = ChatRequest(chatUser)
+-//            val result = repository.chatBot(request)
+-//
+-//            when (result) {
+-//                is DataResult.Success -> {
+-//
+-//
+-//
+-//                }
+-//                is DataResult.Error -> {
+-//
+-//                }
+-//            }
+-//        }
++                }
++                is DataResult.Error -> {
++                    currentList.add(ChatbotEvent.BotMessage("Xin lỗi, vì đã xảy ra lỗi kết nối"))
++                }
++            }
++            _event.value = currentList
++        }
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingEvent.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingEvent.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingEvent.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingEvent.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingEvent.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingEvent.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingEvent.kt	(date 1785239181723)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editinformation_setting
++package com.vetpet.petbeats.ui.home_user.edit_information_setting
+ 
+ sealed class EditInformationSettingEvent {
+     object NavigationSetting: EditInformationSettingEvent()
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentdetail_wait/AppointmentDetailWaitFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.appointmentdetail_wait\r\n\r\nimport android.app.Dialog\r\nimport android.graphics.Color\r\nimport android.os.Bundle\r\nimport androidx.fragment.app.Fragment\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport android.view.Window\r\nimport androidx.core.graphics.drawable.toDrawable\r\nimport androidx.fragment.app.viewModels\r\nimport androidx.lifecycle.Lifecycle\r\nimport androidx.lifecycle.lifecycleScope\r\nimport androidx.lifecycle.repeatOnLifecycle\r\nimport androidx.navigation.fragment.findNavController\r\nimport com.bumptech.glide.Glide\r\nimport com.example.VetPet.R\r\nimport com.example.VetPet.databinding.FragmentAppointmentDetailBinding\r\nimport com.example.VetPet.databinding.LayoutPopupDialogBinding\r\nimport com.example.VetPet.databinding.LayoutPopupReasonBinding\r\nimport com.vetpet.petbeats.data.remote.api.ApiClinicHome\r\nimport com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance\r\nimport com.vetpet.petbeats.data.repository.HomeClinicRepository\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentdetail_receive.AppointmentDetailReceiveEvent\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.AppointmentScheduleEvent\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.AppointmentScheduleViewModelFactory\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentReceiveAdapter\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentRefuseAdapter\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentWaitAdapter\r\nimport kotlinx.coroutines.launch\r\nimport kotlin.getValue\r\n\r\n\r\nclass AppointmentDetailWaitFragment : Fragment() {\r\n    private var _binding: FragmentAppointmentDetailBinding ?= null\r\n    private val binding get() = _binding!!\r\n    private val viewModel: AppointmentDetailWaitViewModel by viewModels {\r\n        AppointmentDetailWaitViewModelFactory(\r\n            HomeClinicRepository(\r\n                RetrofitInstance.getAuthRetrofit(requireContext()).create(ApiClinicHome::class.java)\r\n            )\r\n        )\r\n    }\r\n\r\n    override fun onCreateView(\r\n        inflater: LayoutInflater, container: ViewGroup?,\r\n        savedInstanceState: Bundle?\r\n    ): View {\r\n        // Inflate the layout for this fragment\r\n        _binding = FragmentAppointmentDetailBinding.inflate(inflater, container, false)\r\n        return binding.root\r\n    }\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        super.onViewCreated(view, savedInstanceState)\r\n\r\n        val id = arguments?.getInt(\"id\") ?: 0\r\n        viewModel.onAppointmentDetail(id)\r\n\r\n        setOnClick()\r\n        stateData()\r\n        eventData()\r\n    }\r\n\r\n    override fun onDestroyView() {\r\n        super.onDestroyView()\r\n        _binding = null\r\n    }\r\n\r\n\r\n    private fun setOnClick() {\r\n        val id = arguments?.getInt(\"id\") ?: 0\r\n\r\n        binding.btnBack.setOnClickListener {\r\n            viewModel.appointmentScheduleClick()\r\n        }\r\n        binding.btnRefuse.setOnClickListener {\r\n            showPopupDialog(\r\n                message = \"Từ chối lịch khám?\",\r\n                leftButton = \"Quay lại\",\r\n                rightButton = \"Từ chối\",\r\n                onRightButtonClick = {\r\n                    showPopupReason(\r\n                        leftButton = \"Quay lại\",\r\n                        rightButton = \"Từ chối\",\r\n                        onRightButtonClick = { reason ->\r\n                            viewModel.itemRefuseClick(id, reason)\r\n                        }\r\n                    )\r\n                }\r\n            )\r\n        }\r\n        binding.btnReceive.setOnClickListener {\r\n            showPopupDialog(\r\n                message = \"Tiếp nhận lịch khám?\",\r\n                leftButton = \"Quay lại\",\r\n                rightButton = \"Tiếp nhận\",\r\n                onRightButtonClick = {\r\n                    viewModel.itemReceiveClick(id)\r\n                }\r\n            )\r\n        }\r\n    }\r\n\r\n    private fun showPopupDialog(\r\n        message: String,\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: (() -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupDialogBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.tvDialogTitle.text = message\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke()\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun showPopupReason(\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: ((String) -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupReasonBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            val reason = dialogBinding.tvDialogTitle.text.toString()\r\n\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke(reason)\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun stateData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.state.collect { state ->\r\n                    binding.numbDay.text = state.day\r\n                    binding.numbTime.text = state.time\r\n                    binding.numbQuantity.text = state.quantity.toString()\r\n                    binding.numbService.text = state.bookingType\r\n                    binding.numbOwner.text = state.fullName\r\n                    binding.numbPhone.text = state.phone\r\n                    binding.numbAddress.text = state.address\r\n                    binding.numbState.text = state.state\r\n\r\n\r\n                    binding.numbInclude.text = if (state.services.isEmpty()) {\r\n                        \"Không có dịch vụ\"\r\n                    }\r\n                    else {\r\n                        state.services.joinToString(separator = \", \") { serviceItem ->\r\n                            serviceItem.name\r\n                        }\r\n                    }\r\n\r\n\r\n                    if (state.imgPet.isNotEmpty()) {\r\n                        Glide.with(requireContext())\r\n                            .load(state.imgPet)\r\n                            .into(binding.imgPet)\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun eventData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.event.collect { event ->\r\n                    when(event) {\r\n                        is AppointmentDetailWaitEvent.NavigationAppointmentSchedule -> {\r\n                            findNavController().popBackStack()\r\n                        }\r\n                        is AppointmentDetailWaitEvent.NavigationDetailReceive -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailReceive,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                        is AppointmentDetailWaitEvent.NavigationDetailRefuse -> {\r\n                            findNavController().navigate(R.id.appointmentDetailRefuse,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentdetail_wait/AppointmentDetailWaitFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentdetail_wait/AppointmentDetailWaitFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentdetail_wait/AppointmentDetailWaitFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentdetail_wait/AppointmentDetailWaitFragment.kt	(date 1785231193769)
+@@ -217,14 +217,14 @@
+                         }
+                         is AppointmentDetailWaitEvent.NavigationDetailReceive -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailReceive,
++                                R.id.appointmentDetailReceiveFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+                             )
+                         }
+                         is AppointmentDetailWaitEvent.NavigationDetailRefuse -> {
+-                            findNavController().navigate(R.id.appointmentDetailRefuse,
++                            findNavController().navigate(R.id.appointmentDetailRefuseFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModelFactory.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModelFactory.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModelFactory.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModelFactory.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModelFactory.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModelFactory.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModelFactory.kt	(date 1785239181653)
+@@ -1,9 +1,8 @@
+-package com.vetpet.petbeats.ui.home_user.editinformation_setting
++package com.vetpet.petbeats.ui.home_user.edit_information_setting
+ 
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.ViewModelProvider
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+-import com.vetpet.petbeats.ui.home_user.editpassword_setting.EditPasswordSettingViewModel
+ 
+ class EditInformationSettingViewModelFactory(
+     private val repository: HomeUserRepository
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModel.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModel.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModel.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModel.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModel.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingViewModel.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingViewModel.kt	(date 1785239181633)
+@@ -1,17 +1,11 @@
+-package com.vetpet.petbeats.ui.home_user.editinformation_setting
++package com.vetpet.petbeats.ui.home_user.edit_information_setting
+ 
+ import android.util.Log
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+ import com.vetpet.petbeats.core.base.DataResult
+-import com.vetpet.petbeats.data.remote.model.calendar.home_clinic.request.ProfileRequest
+-import com.vetpet.petbeats.data.remote.model.calendar.home_user.request.AppointmentIdRequest
+ import com.vetpet.petbeats.data.remote.model.calendar.home_user.request.UpdateProfileRequest
+-import com.vetpet.petbeats.data.repository.ErrorTarget
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+-import com.vetpet.petbeats.ui.home_clinic.informationclinic.InformationClinicEvent
+-import com.vetpet.petbeats.ui.home_user.editpassword_setting.EditPasswordSettingEvent
+-import com.vetpet.petbeats.ui.home_user.editpassword_setting.EditPasswordSettingState
+ import kotlinx.coroutines.flow.MutableSharedFlow
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.asSharedFlow
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingState.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingState.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingState.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingState.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingState.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingState.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingState.kt	(date 1785239181622)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editinformation_setting
++package com.vetpet.petbeats.ui.home_user.edit_information_setting
+ 
+ data class EditInformationSettingState (
+     val id: Int = 0,
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModelFactory.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModelFactory.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModelFactory.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModelFactory.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModelFactory.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModelFactory.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModelFactory.kt	(date 1785239181602)
+@@ -1,8 +1,7 @@
+-package com.vetpet.petbeats.ui.home_user.editpassword_setting
++package com.vetpet.petbeats.ui.home_user.edit_password_setting
+ 
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.ViewModelProvider
+-import com.vetpet.petbeats.data.remote.sharepreference.TokenManager
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+ 
+ class EditPasswordSettingViewModelFactory(
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModel.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModel.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModel.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModel.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModel.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingViewModel.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingViewModel.kt	(date 1785239181705)
+@@ -1,14 +1,11 @@
+-package com.vetpet.petbeats.ui.home_user.editpassword_setting
++package com.vetpet.petbeats.ui.home_user.edit_password_setting
+ 
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+ import com.vetpet.petbeats.core.base.DataResult
+-import com.vetpet.petbeats.data.remote.model.calendar.auth.request.ResetPasswordRequest
+ import com.vetpet.petbeats.data.remote.model.calendar.home_user.request.ChangePasswordUserRequest
+-import com.vetpet.petbeats.data.remote.sharepreference.TokenManager
+ import com.vetpet.petbeats.data.repository.ErrorTarget
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+-import com.vetpet.petbeats.ui.auth.resetpassword.ResetPasswordEvent
+ import kotlinx.coroutines.flow.MutableSharedFlow
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.asSharedFlow
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/schedulelist/ScheduleListFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.schedulelist\r\n\r\nimport android.app.Dialog\r\nimport android.graphics.Color\r\nimport android.os.Bundle\r\nimport androidx.fragment.app.Fragment\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport android.view.Window\r\nimport androidx.core.content.ContextCompat\r\nimport androidx.core.graphics.drawable.toDrawable\r\nimport androidx.fragment.app.viewModels\r\nimport androidx.lifecycle.Lifecycle\r\nimport androidx.lifecycle.lifecycleScope\r\nimport androidx.lifecycle.repeatOnLifecycle\r\nimport androidx.navigation.fragment.findNavController\r\nimport androidx.recyclerview.widget.LinearLayoutManager\r\nimport com.example.VetPet.R\r\nimport com.example.VetPet.databinding.FragmentScheduleListBinding\r\nimport com.example.VetPet.databinding.LayoutPopupDialogBinding\r\nimport com.example.VetPet.databinding.LayoutPopupReasonBinding\r\nimport com.vetpet.petbeats.data.remote.api.ApiClinicHome\r\nimport com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance\r\nimport com.vetpet.petbeats.data.repository.HomeClinicRepository\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentReceiveAdapter\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentRefuseAdapter\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentWaitAdapter\r\nimport kotlinx.coroutines.launch\r\nimport kotlin.getValue\r\n\r\n\r\nclass ScheduleListFragment : Fragment() {\r\n    private var _binding: FragmentScheduleListBinding ?= null\r\n    private val binding get() = _binding!!\r\n    private lateinit var adapterWait: AppointmentWaitAdapter\r\n    private lateinit var adapterRefuse: AppointmentRefuseAdapter\r\n    private lateinit var adapterReceive: AppointmentReceiveAdapter\r\n    private val viewModel: ScheduleListViewModel by viewModels {\r\n        ScheduleListViewModelFactory(\r\n            HomeClinicRepository(\r\n                RetrofitInstance.getAuthRetrofit(requireContext()).create(ApiClinicHome::class.java)\r\n            )\r\n        )\r\n    }\r\n\r\n    override fun onCreateView(\r\n        inflater: LayoutInflater, container: ViewGroup?,\r\n        savedInstanceState: Bundle?\r\n    ): View {\r\n        // Inflate the layout for this fragment\r\n        _binding = FragmentScheduleListBinding.inflate(inflater, container, false)\r\n        return binding.root\r\n    }\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        super.onViewCreated(view, savedInstanceState)\r\n\r\n        clickList()\r\n\r\n        binding.recycle.layoutManager = LinearLayoutManager(requireContext())\r\n\r\n        setOnClick()\r\n        stateData()\r\n        eventData()\r\n    }\r\n\r\n    override fun onDestroyView() {\r\n        super.onDestroyView()\r\n        _binding = null\r\n    }\r\n\r\n    private fun clickList() {\r\n        adapterWait = AppointmentWaitAdapter(\r\n            onDetailClick = { id -> viewModel.itemDetailClick(id) },\r\n\r\n            onRefuseClick = { id ->\r\n                showPopupDialog(\r\n                    message = \"Từ chối lịch khám?\",\r\n                    leftButton = \"Quay lại\",\r\n                    rightButton = \"Từ chối\",\r\n                    onRightButtonClick = {\r\n                        showPopupReason(\r\n                            leftButton = \"Quay lại\",\r\n                            rightButton = \"Từ chối\",\r\n                            onRightButtonClick = { reason ->\r\n                                viewModel.itemRefuseClick(id, reason)\r\n                            }\r\n                        )\r\n                    }\r\n                ) },\r\n\r\n\r\n            onReceiveClick = { id ->\r\n                showPopupDialog(\r\n                    message = \"Tiếp nhận lịch khám?\",\r\n                    leftButton = \"Quay lại\",\r\n                    rightButton = \"Tiếp nhận\",\r\n                    onRightButtonClick = {\r\n                        viewModel.itemReceiveClick(id)\r\n                    }\r\n                ) },\r\n        )\r\n\r\n        adapterReceive = AppointmentReceiveAdapter { id ->\r\n            viewModel.receiveClick(id)\r\n        }\r\n\r\n        adapterRefuse = AppointmentRefuseAdapter { id ->\r\n            viewModel.refuseClick(id)\r\n        }\r\n    }\r\n\r\n    private fun setOnClick() {\r\n        binding.btnBack.setOnClickListener {\r\n            viewModel.appointmentScheduleClick()\r\n        }\r\n\r\n\r\n        binding.btnWait.setOnClickListener {\r\n            viewModel.onWaitClick()\r\n        }\r\n        binding.btnRefuse.setOnClickListener {\r\n            viewModel.onRefuseClick()\r\n        }\r\n        binding.btnReceive.setOnClickListener {\r\n            viewModel.onReceiveClick()\r\n        }\r\n    }\r\n\r\n    private fun showPopupDialog(\r\n        message: String,\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: (() -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupDialogBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.tvDialogTitle.text = message\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke()\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun showPopupReason(\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: ((String) -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupReasonBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            val reason = dialogBinding.tvDialogTitle.text.toString()\r\n\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke(reason)\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun stateData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.state.collect { state ->\r\n\r\n                    if (state.isWait) {\r\n                        binding.btnWait.setBackgroundResource(R.drawable.button_wait)\r\n                        binding.linePending.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextWait)\r\n                        binding.btnWait.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterWait\r\n                        adapterWait.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentWaitList()\r\n                    }\r\n                    else {\r\n                        binding.btnWait.setBackgroundResource(R.color.colorBackground)\r\n                        binding.linePending.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnWait.setTextColor(clinic)\r\n                    }\r\n\r\n                    if (state.isRefuse) {\r\n                        binding.btnRefuse.setBackgroundResource(R.drawable.button_refuse)\r\n                        binding.lineRefuse.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextRefuse)\r\n                        binding.btnRefuse.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterRefuse\r\n                        adapterRefuse.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentRefuseList()\r\n                    }\r\n                    else {\r\n                        binding.btnRefuse.setBackgroundResource(R.color.colorBackground)\r\n                        binding.lineRefuse.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnRefuse.setTextColor(clinic)\r\n                    }\r\n\r\n                    if (state.isReceive) {\r\n                        binding.btnReceive.setBackgroundResource(R.drawable.button_receive)\r\n                        binding.lineReceive.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextReceive)\r\n                        binding.btnReceive.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterReceive\r\n                        adapterReceive.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentReceiveList()\r\n                    }\r\n                    else {\r\n                        binding.btnReceive.setBackgroundResource(R.color.colorBackground)\r\n                        binding.lineReceive.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnReceive.setTextColor(clinic)\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun eventData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.event.collect { event ->\r\n                    when (event) {\r\n                        is ScheduleListEvent.NavigationAppointmentSchedule -> {\r\n                            findNavController().navigate(R.id.scheduleList_appointmentSchedule)\r\n                        }\r\n                        is ScheduleListEvent.NavigationDetail -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailWait,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                        is ScheduleListEvent.NavigationDetailReceive -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailReceive,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                        is ScheduleListEvent.NavigationDetailRefuse -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailRefuse,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/schedulelist/ScheduleListFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/schedulelist/ScheduleListFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/schedulelist/ScheduleListFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/schedulelist/ScheduleListFragment.kt	(date 1785231338316)
+@@ -283,7 +283,7 @@
+                         }
+                         is ScheduleListEvent.NavigationDetail -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailWait,
++                                R.id.appointmentDetailWaitFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+@@ -291,7 +291,7 @@
+                         }
+                         is ScheduleListEvent.NavigationDetailReceive -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailReceive,
++                                R.id.appointmentDetailReceiveFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+@@ -299,7 +299,7 @@
+                         }
+                         is ScheduleListEvent.NavigationDetailRefuse -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailRefuse,
++                                R.id.appointmentDetailRefuseFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingFragment.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingFragment.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingFragment.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editpassword_setting/EditPasswordSettingFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_password_setting/EditPasswordSettingFragment.kt	(date 1785239181612)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editpassword_setting
++package com.vetpet.petbeats.ui.home_user.edit_password_setting
+ 
+ import android.os.Bundle
+ import android.text.method.HideReturnsTransformationMethod
+@@ -16,13 +16,9 @@
+ import androidx.navigation.fragment.findNavController
+ import com.example.VetPet.R
+ import com.example.VetPet.databinding.FragmentEditPasswordSettingBinding
+-import com.example.VetPet.databinding.FragmentSettingUserBinding
+ import com.vetpet.petbeats.data.remote.api.ApiUserHome
+ import com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance
+-import com.vetpet.petbeats.data.remote.sharepreference.TokenManager
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+-import com.vetpet.petbeats.ui.home_user.setting.SettingUserViewModel
+-import com.vetpet.petbeats.ui.home_user.setting.SettingUserViewModelFactory
+ import kotlinx.coroutines.launch
+ import kotlin.getValue
+ 
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingFragment.kt
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingFragment.kt
+rename from app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingFragment.kt
+rename to app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_user/editinformation_setting/EditInformationSettingFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_user/edit_information_setting/EditInformationSettingFragment.kt	(date 1785239181695)
+@@ -1,4 +1,4 @@
+-package com.vetpet.petbeats.ui.home_user.editinformation_setting
++package com.vetpet.petbeats.ui.home_user.edit_information_setting
+ 
+ import android.app.Dialog
+ import android.content.Context
+@@ -23,13 +23,10 @@
+ import com.bumptech.glide.Glide
+ import com.example.VetPet.R
+ import com.example.VetPet.databinding.FragmentEditInformationSettingBinding
+-import com.example.VetPet.databinding.FragmentEditPasswordSettingBinding
+ import com.example.VetPet.databinding.LayoutPopupDialogBinding
+ import com.vetpet.petbeats.data.remote.api.ApiUserHome
+ import com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance
+ import com.vetpet.petbeats.data.repository.HomeUserRepository
+-import com.vetpet.petbeats.ui.home_user.editpassword_setting.EditPasswordSettingViewModel
+-import com.vetpet.petbeats.ui.home_user.editpassword_setting.EditPasswordSettingViewModelFactory
+ import kotlinx.coroutines.launch
+ import okhttp3.MediaType
+ import okhttp3.MultipartBody
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicState.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.clinic\r\n\r\ndata class ClinicState (\r\n    val id: Int = 0\r\n)
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicState.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicState.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicState.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicState.kt	(date 1785227483956)
+@@ -1,5 +1,13 @@
+ package com.vetpet.petbeats.ui.home_clinic.clinic
+ 
+ data class ClinicState (
+-    val id: Int = 0
++    val id: Int = 0,
++    val image: String = "",
++    val name: String = "",
++    val phone: String = "",
++    val address: String = "",
++    val link: String = "",
++    val time: String = "",
++    val state: String = "",
++    val services: List<String> = emptyList()
+ )
+\ No newline at end of file
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicEvent.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.clinic\r\n\r\nsealed class ClinicEvent {\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicEvent.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicEvent.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicEvent.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicEvent.kt	(date 1785240248318)
+@@ -1,4 +1,6 @@
+ package com.vetpet.petbeats.ui.home_clinic.clinic
+ 
+ sealed class ClinicEvent {
++    object NavigationEditInformation: ClinicEvent()
++    object NavigationEditPassword: ClinicEvent()
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.clinic\r\n\r\nimport androidx.lifecycle.ViewModel\r\nimport com.vetpet.petbeats.data.repository.HomeClinicRepository\r\nimport kotlinx.coroutines.flow.MutableSharedFlow\r\nimport kotlinx.coroutines.flow.MutableStateFlow\r\nimport kotlinx.coroutines.flow.asSharedFlow\r\nimport kotlinx.coroutines.flow.asStateFlow\r\n\r\nclass ClinicViewModel(\r\n    private val repository: HomeClinicRepository\r\n): ViewModel() {\r\n    private val _state = MutableStateFlow(ClinicState())\r\n    val state = _state.asStateFlow()\r\n\r\n    private val _event = MutableSharedFlow<ClinicEvent>()\r\n    val event = _event.asSharedFlow()\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicViewModel.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicViewModel.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicViewModel.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicViewModel.kt	(date 1785240248331)
+@@ -1,11 +1,13 @@
+ package com.vetpet.petbeats.ui.home_clinic.clinic
+ 
+ import androidx.lifecycle.ViewModel
++import androidx.lifecycle.viewModelScope
+ import com.vetpet.petbeats.data.repository.HomeClinicRepository
+ import kotlinx.coroutines.flow.MutableSharedFlow
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.asSharedFlow
+ import kotlinx.coroutines.flow.asStateFlow
++import kotlinx.coroutines.launch
+ 
+ class ClinicViewModel(
+     private val repository: HomeClinicRepository
+@@ -15,4 +17,19 @@
+ 
+     private val _event = MutableSharedFlow<ClinicEvent>()
+     val event = _event.asSharedFlow()
++
++    fun editInformationClick() {
++        viewModelScope.launch {
++            _event.emit(ClinicEvent.NavigationEditInformation)
++        }
++    }
++
++    fun editPasswordClick() {
++        viewModelScope.launch {
++            _event.emit(ClinicEvent.NavigationEditPassword)
++        }
++    }
++
++
++
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentschedule/AppointmentScheduleFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.appointmentschedule\r\n\r\nimport android.app.Dialog\r\nimport android.graphics.Color\r\nimport android.os.Bundle\r\nimport androidx.fragment.app.Fragment\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport android.view.Window\r\nimport androidx.fragment.app.viewModels\r\nimport androidx.lifecycle.Lifecycle\r\nimport androidx.lifecycle.lifecycleScope\r\nimport androidx.lifecycle.repeatOnLifecycle\r\nimport androidx.navigation.fragment.findNavController\r\nimport androidx.recyclerview.widget.LinearLayoutManager\r\nimport com.example.VetPet.R\r\nimport com.example.VetPet.databinding.FragmentAppointmentScheduleBinding\r\nimport com.vetpet.petbeats.data.remote.api.ApiClinicHome\r\nimport com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance\r\nimport com.vetpet.petbeats.data.repository.HomeClinicRepository\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentRefuseAdapter\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentWaitAdapter\r\nimport kotlinx.coroutines.launch\r\nimport kotlin.getValue\r\nimport androidx.core.content.ContextCompat\r\nimport androidx.core.graphics.drawable.toDrawable\r\nimport com.example.VetPet.databinding.LayoutPopupDialogBinding\r\nimport com.example.VetPet.databinding.LayoutPopupReasonBinding\r\nimport com.vetpet.petbeats.ui.home_clinic.appointmentschedule.adapter.AppointmentReceiveAdapter\r\n\r\n\r\nclass AppointmentScheduleFragment : Fragment() {\r\n    private var _binding: FragmentAppointmentScheduleBinding ?= null\r\n    private val binding get() = _binding!!\r\n    private lateinit var adapterWait: AppointmentWaitAdapter\r\n    private lateinit var adapterRefuse: AppointmentRefuseAdapter\r\n    private lateinit var adapterReceive: AppointmentReceiveAdapter\r\n    private val viewModel: AppointmentScheduleViewModel by viewModels {\r\n        AppointmentScheduleViewModelFactory(\r\n            HomeClinicRepository(\r\n                RetrofitInstance.getAuthRetrofit(requireContext()).create(ApiClinicHome::class.java)\r\n            )\r\n        )\r\n    }\r\n\r\n    override fun onCreateView(\r\n        inflater: LayoutInflater, container: ViewGroup?,\r\n        savedInstanceState: Bundle?\r\n    ): View {\r\n        // Inflate the layout for this fragment\r\n        _binding = FragmentAppointmentScheduleBinding.inflate(inflater, container, false)\r\n        return binding.root\r\n    }\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        super.onViewCreated(view, savedInstanceState)\r\n\r\n        clickList()\r\n\r\n        binding.recycle.layoutManager = LinearLayoutManager(requireContext())\r\n\r\n\r\n\r\n        setOnClick()\r\n        stateData()\r\n        eventData()\r\n    }\r\n\r\n    override fun onDestroyView() {\r\n        super.onDestroyView()\r\n        _binding = null\r\n    }\r\n\r\n\r\n    private fun clickList() {\r\n        adapterWait = AppointmentWaitAdapter(\r\n            onDetailClick = { id -> viewModel.itemDetailClick(id)},\r\n\r\n            onRefuseClick = { id ->\r\n                showPopupDialog(\r\n                    message = \"Từ chối lịch khám?\",\r\n                    leftButton = \"Quay lại\",\r\n                    rightButton = \"Từ chối\",\r\n                    onRightButtonClick = {\r\n                        showPopupReason(\r\n                            leftButton = \"Quay lại\",\r\n                            rightButton = \"Từ chối\",\r\n                            onRightButtonClick = { reason ->\r\n                                viewModel.itemRefuseClick(id, reason)\r\n                            }\r\n                        )\r\n                    }\r\n                ) },\r\n\r\n\r\n            onReceiveClick = { id ->\r\n                showPopupDialog(\r\n                    message = \"Tiếp nhận lịch khám?\",\r\n                    leftButton = \"Quay lại\",\r\n                    rightButton = \"Tiếp nhận\",\r\n                    onRightButtonClick = {\r\n                        viewModel.itemReceiveClick(id)\r\n                    }\r\n                ) },\r\n        )\r\n\r\n        adapterReceive = AppointmentReceiveAdapter { id ->\r\n            viewModel.receiveClick(id)\r\n        }\r\n\r\n        adapterRefuse = AppointmentRefuseAdapter { id ->\r\n            viewModel.refuseClick(id)\r\n        }\r\n    }\r\n\r\n\r\n\r\n    private fun setOnClick() {\r\n        binding.buttonListAll.setOnClickListener {\r\n            viewModel.scheduleList()\r\n        }\r\n\r\n\r\n        binding.btnWait.setOnClickListener {\r\n            viewModel.onWaitClick()\r\n        }\r\n        binding.btnRefuse.setOnClickListener {\r\n            viewModel.onRefuseClick()\r\n        }\r\n        binding.btnReceive.setOnClickListener {\r\n            viewModel.onReceiveClick()\r\n        }\r\n\r\n    }\r\n\r\n    private fun showPopupDialog(\r\n        message: String,\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: (() -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupDialogBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.tvDialogTitle.text = message\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke()\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun showPopupReason(\r\n        leftButton: String,\r\n        rightButton: String,\r\n\r\n        onLeftButtonClick: (() -> Unit)? = null,\r\n        onRightButtonClick: ((String) -> Unit)? = null\r\n    ) {\r\n        //Khởi tạo binding\r\n        val dialog = Dialog(requireContext())\r\n        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)\r\n\r\n        val dialogBinding = LayoutPopupReasonBinding.inflate(layoutInflater)\r\n        dialog.setContentView(dialogBinding.root)\r\n\r\n        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())\r\n\r\n        //Xử lý giao diện\r\n        dialogBinding.btnLeft.text = leftButton\r\n        dialogBinding.btnRight.text = rightButton\r\n\r\n        dialogBinding.btnLeft.setOnClickListener {\r\n            dialog.dismiss()\r\n            onLeftButtonClick?.invoke()\r\n        }\r\n\r\n        dialogBinding.btnRight.setOnClickListener {\r\n            val reason = dialogBinding.tvDialogTitle.text.toString()\r\n\r\n            dialog.dismiss()\r\n            onRightButtonClick?.invoke(reason)\r\n        }\r\n\r\n        dialog.show()\r\n    }\r\n\r\n    private fun stateData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.state.collect { state ->\r\n\r\n                    if (state.isWait) {\r\n                        binding.btnWait.setBackgroundResource(R.drawable.button_wait)\r\n                        binding.linePending.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextWait)\r\n                        binding.btnWait.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterWait\r\n                        adapterWait.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentWaitList()\r\n                    }\r\n                    else {\r\n                        binding.btnWait.setBackgroundResource(R.color.colorBackground)\r\n                        binding.linePending.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnWait.setTextColor(clinic)\r\n                    }\r\n\r\n                    if (state.isRefuse) {\r\n                        binding.btnRefuse.setBackgroundResource(R.drawable.button_refuse)\r\n                        binding.lineRefuse.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextRefuse)\r\n                        binding.btnRefuse.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterRefuse\r\n                        adapterRefuse.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentRefuseList()\r\n                    }\r\n                    else {\r\n                        binding.btnRefuse.setBackgroundResource(R.color.colorBackground)\r\n                        binding.lineRefuse.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnRefuse.setTextColor(clinic)\r\n                    }\r\n\r\n                    if (state.isReceive) {\r\n                        binding.btnReceive.setBackgroundResource(R.drawable.button_receive)\r\n                        binding.lineReceive.visibility = View.VISIBLE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorTextReceive)\r\n                        binding.btnReceive.setTextColor(clinic)\r\n\r\n\r\n                        binding.recycle.adapter = adapterReceive\r\n                        adapterReceive.submitList(state.listAppointmentChild)\r\n\r\n\r\n                        viewModel.onAppointmentReceiveList()\r\n                    }\r\n                    else {\r\n                        binding.btnReceive.setBackgroundResource(R.color.colorBackground)\r\n                        binding.lineReceive.visibility = View.GONE\r\n\r\n                        val clinic = ContextCompat.getColor(requireContext(),R.color.colorPrimary)\r\n                        binding.btnReceive.setTextColor(clinic)\r\n                    }\r\n\r\n\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun eventData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.event.collect { event ->\r\n                    when (event) {\r\n                        is AppointmentScheduleEvent.NavigationScheduleList -> {\r\n                            findNavController().navigate(R.id.scheduleListFragment)\r\n                        }\r\n                        is AppointmentScheduleEvent.NavigationDetail -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailWait,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                        is AppointmentScheduleEvent.NavigationDetailReceive -> {\r\n                            findNavController().navigate(\r\n                                R.id.appointmentDetailReceive,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                        is AppointmentScheduleEvent.NavigationDetailRefuse -> {\r\n                            findNavController().navigate(R.id.appointmentDetailRefuse,\r\n                                Bundle().apply {\r\n                                    putInt(\"id\", event.id)\r\n                                }\r\n                            )\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentschedule/AppointmentScheduleFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentschedule/AppointmentScheduleFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentschedule/AppointmentScheduleFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/appointmentschedule/AppointmentScheduleFragment.kt	(date 1785231206832)
+@@ -291,7 +291,7 @@
+                         }
+                         is AppointmentScheduleEvent.NavigationDetail -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailWait,
++                                R.id.appointmentDetailWaitFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+@@ -299,14 +299,14 @@
+                         }
+                         is AppointmentScheduleEvent.NavigationDetailReceive -> {
+                             findNavController().navigate(
+-                                R.id.appointmentDetailReceive,
++                                R.id.appointmentDetailReceiveFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+                             )
+                         }
+                         is AppointmentScheduleEvent.NavigationDetailRefuse -> {
+-                            findNavController().navigate(R.id.appointmentDetailRefuse,
++                            findNavController().navigate(R.id.appointmentDetailRefuseFragment,
+                                 Bundle().apply {
+                                     putInt("id", event.id)
+                                 }
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/activitymain/HomeClinicActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.activitymain\r\n\r\nimport android.os.Bundle\r\nimport android.view.LayoutInflater\r\nimport androidx.activity.enableEdgeToEdge\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.core.view.ViewCompat\r\nimport androidx.core.view.WindowInsetsCompat\r\nimport androidx.navigation.NavController\r\nimport androidx.navigation.fragment.NavHostFragment\r\nimport androidx.navigation.ui.setupWithNavController\r\nimport com.example.VetPet.R\r\nimport com.example.VetPet.databinding.ActivityHomeBinding\r\nimport com.example.VetPet.databinding.ActivityHomeClinicBinding\r\n\r\nclass HomeClinicActivity : AppCompatActivity() {\r\n    private lateinit var binding: ActivityHomeClinicBinding\r\n    private lateinit var navController: NavController\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        binding = ActivityHomeClinicBinding.inflate(layoutInflater)\r\n        setContentView(binding.root)\r\n\r\n        setupController()\r\n        setupBottomNav()\r\n        hideDestination()\r\n    }\r\n\r\n    private fun setupController() {\r\n        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHomeClinicFragment) as NavHostFragment\r\n        navController = navHostFragment.navController\r\n    }\r\n\r\n    private fun setupBottomNav() {\r\n        binding.bottomClinicNav.setupWithNavController(navController)\r\n    }\r\n\r\n    private fun hideDestination() {\r\n        navController.addOnDestinationChangedListener { controller, destination, bundle ->\r\n            // Fix lỗi không hiện màu ở Bottom Nav\r\n            when (destination.id) {\r\n                R.id.scheduleListFragment -> {\r\n                    binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true\r\n                }\r\n                R.id.appointmentDetailWait -> {\r\n                    binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true\r\n                }\r\n                R.id.appointmentDetailReceive -> {\r\n                    binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true\r\n                }\r\n                R.id.appointmentDetailRefuse -> {\r\n                    binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true\r\n                }\r\n\r\n            }\r\n        }\r\n    }\r\n}\r\n
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/activitymain/HomeClinicActivity.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/activitymain/HomeClinicActivity.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/activitymain/HomeClinicActivity.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/activitymain/HomeClinicActivity.kt	(date 1785231180496)
+@@ -43,13 +43,13 @@
+                 R.id.scheduleListFragment -> {
+                     binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true
+                 }
+-                R.id.appointmentDetailWait -> {
++                R.id.appointmentDetailWaitFragment -> {
+                     binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true
+                 }
+-                R.id.appointmentDetailReceive -> {
++                R.id.appointmentDetailReceiveFragment -> {
+                     binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true
+                 }
+-                R.id.appointmentDetailRefuse -> {
++                R.id.appointmentDetailRefuseFragment -> {
+                     binding.bottomClinicNav.menu.findItem(R.id.appointmentScheduleFragment)?.isChecked = true
+                 }
+ 
+Index: app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.vetpet.petbeats.ui.home_clinic.clinic\r\n\r\nimport android.os.Bundle\r\nimport androidx.fragment.app.Fragment\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport androidx.fragment.app.viewModels\r\nimport androidx.lifecycle.Lifecycle\r\nimport androidx.lifecycle.lifecycleScope\r\nimport androidx.lifecycle.repeatOnLifecycle\r\nimport com.example.VetPet.R\r\nimport com.example.VetPet.databinding.FragmentClinicBinding\r\nimport com.example.VetPet.databinding.FragmentScheduleListBinding\r\nimport com.vetpet.petbeats.data.remote.api.ApiClinicHome\r\nimport com.vetpet.petbeats.data.remote.retrofitInstance.RetrofitInstance\r\nimport com.vetpet.petbeats.data.repository.HomeClinicRepository\r\nimport com.vetpet.petbeats.ui.home_clinic.schedulelist.ScheduleListViewModel\r\nimport com.vetpet.petbeats.ui.home_clinic.schedulelist.ScheduleListViewModelFactory\r\nimport kotlinx.coroutines.launch\r\nimport kotlin.getValue\r\n\r\n\r\nclass ClinicFragment : Fragment() {\r\n    private var _binding: FragmentClinicBinding ?= null\r\n    private val binding get() = _binding!!\r\n    private val viewModel: ClinicViewModel by viewModels {\r\n        ClinicViewModelFactory(\r\n            HomeClinicRepository(\r\n                RetrofitInstance.getAuthRetrofit(requireContext()).create(ApiClinicHome::class.java)\r\n            )\r\n        )\r\n    }\r\n\r\n    override fun onCreateView(\r\n        inflater: LayoutInflater, container: ViewGroup?,\r\n        savedInstanceState: Bundle?\r\n    ): View {\r\n        // Inflate the layout for this fragment\r\n        _binding = FragmentClinicBinding.inflate(inflater, container, false)\r\n        return binding.root\r\n    }\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        super.onViewCreated(view, savedInstanceState)\r\n\r\n        setOnClick()\r\n        stateData()\r\n        eventData()\r\n    }\r\n\r\n    override fun onDestroyView() {\r\n        super.onDestroyView()\r\n        _binding = null\r\n    }\r\n\r\n    private fun setOnClick() {\r\n\r\n    }\r\n\r\n    private fun stateData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.state.collect { state ->\r\n\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun eventData() {\r\n        lifecycleScope.launch {\r\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\r\n                viewModel.event.collect { event ->\r\n\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicFragment.kt b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicFragment.kt
+--- a/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicFragment.kt	(revision ef9c3d7a02dde06f7353954daf79519af62acc6d)
++++ b/app/src/main/java/com/vetpet/petbeats/ui/home_clinic/clinic/ClinicFragment.kt	(date 1785240248288)
+@@ -5,10 +5,13 @@
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
++import androidx.core.view.isEmpty
+ import androidx.fragment.app.viewModels
+ import androidx.lifecycle.Lifecycle
+ import androidx.lifecycle.lifecycleScope
+ import androidx.lifecycle.repeatOnLifecycle
++import androidx.navigation.fragment.findNavController
++import com.bumptech.glide.Glide
+ import com.example.VetPet.R
+ import com.example.VetPet.databinding.FragmentClinicBinding
+ import com.example.VetPet.databinding.FragmentScheduleListBinding
+@@ -17,6 +20,7 @@
+ import com.vetpet.petbeats.data.repository.HomeClinicRepository
+ import com.vetpet.petbeats.ui.home_clinic.schedulelist.ScheduleListViewModel
+ import com.vetpet.petbeats.ui.home_clinic.schedulelist.ScheduleListViewModelFactory
++import com.vetpet.petbeats.ui.home_user.chatbot.ChatbotEvent
+ import kotlinx.coroutines.launch
+ import kotlin.getValue
+ 
+@@ -55,6 +59,12 @@
+     }
+ 
+     private fun setOnClick() {
++        binding.btnEdit.setOnClickListener {
++            viewModel.editInformationClick()
++        }
++        binding.btnPassword.setOnClickListener {
++            viewModel.editPasswordClick()
++        }
+ 
+     }
+ 
+@@ -62,6 +72,19 @@
+         lifecycleScope.launch {
+             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                 viewModel.state.collect { state ->
++                    //Check input
++                    binding.tvInputName.text = state.name
++                    binding.tvInputPhone.text = state.phone
++                    binding.tvInputAddress.text = state.address
++                    binding.tvInputLink.text = state.link
++                    binding.tvInputTime.text = state.time
++                    binding.tvInputState.text = state.state
++
++                    if (state.image.isNotEmpty()) {
++                        Glide.with(requireContext())
++                            .load(state.image)
++                            .into(binding.imgLibrary)
++                    }
+ 
+                 }
+             }
+@@ -72,7 +95,14 @@
+         lifecycleScope.launch {
+             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                 viewModel.event.collect { event ->
+-
++                    when (event) {
++                        is ClinicEvent.NavigationEditInformation -> {
++                            findNavController().navigate(R.id.editInformationClinicFragment)
++                        }
++                        is ClinicEvent.NavigationEditPassword -> {
++                            findNavController().navigate(R.id.editPasswordClinicFragment)
++                        }
++                    }
+                 }
+             }
+         }
