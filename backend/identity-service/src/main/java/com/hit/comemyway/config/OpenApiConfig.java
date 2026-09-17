@@ -16,29 +16,14 @@ public class OpenApiConfig {
 
   @Bean
   public OpenAPI customOpenAPI(
-          @Value("${PUBLIC_BASE_URL:https://petcare23593.duckdns.org}")
-          String publicBaseUrl) {
+      @Value("${PUBLIC_BASE_URL:https://petcare23593.duckdns.org}") String publicBaseUrl) {
 
-    return new OpenAPI()
-            .servers(
-                    List.of(
-                            new Server()
-                                    .url(publicBaseUrl)
-                                    .description("Public API")))
-            .info(
-                    new Info()
-                            .title("Come My Way API Documentation")
-                            .version("1.0.0")
-                            .description("Tài liệu hệ thống API tinh gọn cho dự án Come My Way"))
-            .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-            .components(
-                    new Components()
-                            .addSecuritySchemes(
-                                    "BearerAuth",
-                                    new SecurityScheme()
-                                            .name("BearerAuth")
-                                            .type(SecurityScheme.Type.HTTP)
-                                            .scheme("bearer")
-                                            .bearerFormat("JWT")));
+    return new OpenAPI().servers(List.of(new Server().url(publicBaseUrl).description("Public API")))
+        .info(new Info().title("Come My Way API Documentation").version("1.0.0")
+            .description("Tài liệu hệ thống API tinh gọn cho dự án Come My Way"))
+        .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+        .components(new Components().addSecuritySchemes("BearerAuth",
+            new SecurityScheme().name("BearerAuth").type(SecurityScheme.Type.HTTP).scheme("bearer")
+                .bearerFormat("JWT")));
   }
 }
