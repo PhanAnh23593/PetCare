@@ -84,8 +84,9 @@ class SocialBoundaryTest {
 
   @Test
   void forgedOrMissingBearerCannotReadFeed() throws Exception {
-    mvc.perform(get("/api/v1/user/locket/feed")).andExpect(status().isForbidden());
+    mvc.perform(get("/api/v1/user/locket/feed")).andExpect(status().isUnauthorized());
+
     mvc.perform(get("/api/v1/user/locket/feed").header("Authorization", "Bearer forged"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 }
